@@ -38,7 +38,7 @@ class Boid {
         // parameters
         this.maxSpeed = 90;
         this.minSpeed = 60;  // birds must keep moving
-        this.maxForce = 0.1;
+        this.maxForce = 0.2;
         this.separationDistance = 30;  // How close is "too close"
 
         // TODO: make sure vx vy within max and min
@@ -180,8 +180,8 @@ class Boid {
         let sep = this.separate(deltaTime, neighborBoids); // separate
 
         // combine forces
-        this.ax = ali.x + coh.x + sep.x * 3.0; // todo: adjust weighting later when other forces are here
-        this.ay = ali.y + coh.y + sep.y * 3.0;
+        this.ax = ali.x + coh.x + sep.x * 2; // todo: adjust weighting later when other forces are here
+        this.ay = ali.y + coh.y + sep.y * 2;
     
         // Update velocity with acceleration
         this.vx += this.ax;
@@ -211,10 +211,31 @@ class Boid {
     }
     
     draw() {
+        // calculate the angle the boid is traveling
+        const angle = Math.atan2(this.vy, this.vx);
+        
+        // save the current canvas state
+        ctx.save();
+        
+        // move to the boid's position and rotate
+        ctx.translate(this.x, this.y);
+        ctx.rotate(angle);
+        
+        // draw a triangle pointing right (in the direction of travel)
         ctx.beginPath();
-        ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
+        ctx.moveTo(8, 0);      // nose of triangle (front)
+        ctx.lineTo(-4, 4);     // bottom back corner
+        ctx.lineTo(-4, -4);    // top back corner
+        ctx.closePath();
+        
         ctx.fillStyle = '#4af';
         ctx.fill();
+        ctx.strokeStyle = '#6cf';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        // Restore the canvas state
+        ctx.restore();
     }
 }
 
