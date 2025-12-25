@@ -26,6 +26,70 @@ function limit(vx, vy, max) {
     return { x: vx, y: vy };
 }
 
+class WindZone {
+    constructor(x, y, width, height) {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        
+        // random wind direction and strength
+        const angle = Math.random() * Math.PI * 2;
+        const strength = 0.5 + Math.random() * 1.5; // 0.5 to 2.0
+        this.forceX = Math.cos(angle) * strength;
+        this.forceY = Math.sin(angle) * strength;
+        
+        // wind particles
+        this.particles = [];
+        for (let i = 0; i < 15; i++) {
+            this.particles.push({
+                x: this.x + Math.random() * this.width,
+                y: this.y + Math.random() * this.height,
+                size: 2 + Math.random() * 2
+            });
+        }
+    }
+    
+    updateParticles(deltaTime) {
+        for (let p of this.particles) {
+            // move particle in wind direction
+            p.x += this.forceX * 20 * deltaTime;
+            p.y += this.forceY * 20 * deltaTime;
+            
+            // wrap around within this zone
+            if (p.x < this.x) p.x = this.x + this.width;
+            if (p.x > this.x + this.width) p.x = this.x;
+            if (p.y < this.y) p.y = this.y + this.height;
+            if (p.y > this.y + this.height) p.y = this.y;
+        }
+    }
+    
+    draw() {
+        // draw zone border
+        ctx.strokeStyle = 'rgba(100, 150, 200, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(this.x, this.y, this.width, this.height);
+        
+        // draw wind particles
+        for (let p of this.particles) {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(68, 81, 105, 0.6)';
+            ctx.fill();
+        
+        }
+    }
+    
+    // check if boid is in this zone and return wind force
+    applyToBoid(boid) {
+        if (boid.x >= this.x && boid.x <= this.x + this.width &&
+            boid.y >= this.y && boid.y <= this.y + this.height) {
+            return { x: this.forceX, y: this.forceY };
+        }
+        return { x: 0, y: 0 };
+    }
+}
+
 class Boid {
     constructor(x, y) {
         this.x = x;
@@ -164,6 +228,20 @@ class Boid {
         return { x: 0, y: 0 };
     }
 
+    // wind effect
+    applyWind(windZones) {
+        let totalWindX = 0;
+        let totalWindY = 0;
+        
+        for (let zone of windZones) {
+            const wind = zone.applyToBoid(this);
+            totalWindX += wind.x;
+            totalWindY += wind.y;
+        }
+        
+        return { x: totalWindX, y: totalWindY };
+    }
+
     getNeighborBoids(perceptionRadius) {
         return world.allBoids.filter(other => {  // this line was changed
             if (other === this) return false;
@@ -173,15 +251,17 @@ class Boid {
         });
     }
         
-    update(deltaTime) {
+    update(deltaTime, windZones) {
         let neighborBoids = this.getNeighborBoids(this.neighborRadius);
         let ali = this.align(deltaTime, neighborBoids); // align
         let coh = this.cohere(deltaTime, neighborBoids); // cohere
         let sep = this.separate(deltaTime, neighborBoids); // separate
+        let wind = this.applyWind(windZones);  // wind
+
 
         // combine forces
-        this.ax = ali.x + coh.x + sep.x * 2; // todo: adjust weighting later when other forces are here
-        this.ay = ali.y + coh.y + sep.y * 2;
+        this.ax = ali.x + coh.x + sep.x * 2 + wind.x * 0.2; // todo: adjust weighting later when other forces are here
+        this.ay = ali.y + coh.y + sep.y * 2 + wind.y * 0.2;
     
         // Update velocity with acceleration
         this.vx += this.ax;
@@ -234,7 +314,7 @@ class Boid {
         ctx.lineWidth = 1;
         ctx.stroke();
         
-        // Restore the canvas state
+        // restore the canvas state
         ctx.restore();
     }
 }
@@ -248,13 +328,31 @@ class World {
                 Math.random() * canvas.height
             ));
         }
+        
+        // CREATE 3x3 GRID OF WIND ZONES
+        this.windZones = [];
+        const zoneWidth = canvas.width / 3;
+        const zoneHeight = canvas.height / 3;
+        
+        for (let row = 0; row < 3; row++) {
+            for (let col = 0; col < 3; col++) {
+                this.windZones.push(new WindZone(
+                    col * zoneWidth,
+                    row * zoneHeight,
+                    zoneWidth,
+                    zoneHeight
+                ));
+            }
+        }
     }
 }
+
+
 // === CANVAS SETUP ===
 const canvas = document.getElementById('canvas1');
 const ctx = canvas.getContext('2d');
-canvas.width = 800;
-canvas.height = 600;
+canvas.width = 1200;
+canvas.height = 800;
 
 
 
@@ -273,14 +371,21 @@ function render(currentTime) {
         return;
     }
 
-    const deltaTime = (currentTime - previousTime)/1000; // Time in milliseconds
+    const deltaTime = (currentTime - previousTime)/1000;
     previousTime = currentTime;
 
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
+    // UPDATE AND DRAW WIND ZONES - ADD THIS
+    for (let zone of world.windZones) {
+        zone.updateParticles(deltaTime);
+        zone.draw();
+    }
+    
+    // UPDATE AND DRAW BOIDS
     for (let boid of world.allBoids) {
-        boid.update(deltaTime);
+        boid.update(deltaTime, world.windZones);
         boid.draw();
     }
     
