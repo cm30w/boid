@@ -6,7 +6,25 @@
         <title>simpleboid</title>
         <link rel="stylesheet" href="boidstyle.css">
     </head>
+
     <body>
+        <div class="menu">
+            <h2>Boid Controls</h2>
+            
+            <div class="control-group">
+                <label for="speedSlider">Speed: <span id="speedValue">60</span></label>
+                <input type="range" id="speedSlider" min="15" max="600" value="60" step="5">
+                <div class="speed-labels">
+                    <span>15</span>
+                    <span>600</span>
+                </div>
+            </div>
+
+            
+            
+
+        </div>
+
         <canvas id="canvas1"></canvas>
 
         <script src="boidscript.js"></script>

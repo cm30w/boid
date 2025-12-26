@@ -41,7 +41,7 @@ class WindZone {
         
         // wind particles
         this.particles = [];
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 5; i++) {
             this.particles.push({
                 x: this.x + Math.random() * this.width,
                 y: this.y + Math.random() * this.height,
@@ -104,10 +104,6 @@ class Boid {
         this.minSpeed = 60;  // birds must keep moving
         this.maxForce = 0.2;
         this.separationDistance = 30;  // How close is "too close"
-
-        // TODO: make sure vx vy within max and min
-        // this.vx = Math.max(this.vs, this.minSpeed);
-        // this.vy = Math.max(this.vy, this.minSpeed);
 
         this.neighborRadius = 100; // bird can see 
     }
@@ -359,6 +355,41 @@ canvas.height = 800;
 // === CREATE BOIDS ===
 const world = new World();
 
+function sliderChange(idPrefix, cbFn){
+    const sliderElem = document.getElementById(idPrefix+'Slider');
+    const valueElem = document.getElementById(idPrefix+'Value');
+    
+    sliderElem.addEventListener('input', (e) => {
+        const speed = parseInt(e.target.value);
+        valueElem.textContent = speed;
+        
+        cbFn(e.target.value);
+    });
+    
+}
+
+sliderChange('speed', (speed)=>{
+    for (let boid of world.allBoids) {
+        boid.maxSpeed = speed;
+        boid.minSpeed = speed * 0.25; // minSpeed is 25% of maxSpeed
+        
+        // adjust current velocity if it's outside new limits
+        const currentSpeed = magnitude(boid.vx, boid.vy);
+        if (currentSpeed > boid.maxSpeed) {
+            const norm = normalize(boid.vx, boid.vy);
+            boid.vx = norm.x * boid.maxSpeed;
+            boid.vy = norm.y * boid.maxSpeed;
+        }
+        if (currentSpeed < boid.minSpeed && currentSpeed > 0) {
+            const norm = normalize(boid.vx, boid.vy);
+            boid.vx = norm.x * boid.minSpeed;
+            boid.vy = norm.y * boid.minSpeed;
+        }
+    }
+});
+
+
+// === ANIMATION LOOP ===
 
 let previousTime;
 
