@@ -66,15 +66,15 @@ class WindZone {
     
     draw() {
         // draw zone border
-        ctx.strokeStyle = 'rgba(100, 150, 200, 0.3)';
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(184, 226, 193, 0)';
+        ctx.lineWidth = 5;
         ctx.strokeRect(this.x, this.y, this.width, this.height);
         
         // draw wind particles
         for (let p of this.particles) {
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(68, 81, 105, 0.6)';
+            ctx.fillStyle = 'rgba(88, 131, 211, 0.6)';
             ctx.fill();
         
         }
@@ -106,6 +106,10 @@ class Boid {
         this.separationDistance = 30;  // How close is "too close"
 
         this.neighborRadius = 100; // bird can see 
+
+        // colors!
+        const colors = ['#d8e85d', '#d4711c', '#3a6ede', '#d3e2ed', '#ffd4e4'];
+        this.color = colors[Math.floor(Math.random() * colors.length)];
     }
     
     separate(deltaTime, neighborBoids) {
@@ -256,8 +260,8 @@ class Boid {
 
 
         // combine forces
-        this.ax = ali.x + coh.x + sep.x * 2 + wind.x * 0.2; // todo: adjust weighting later when other forces are here
-        this.ay = ali.y + coh.y + sep.y * 2 + wind.y * 0.2;
+        this.ax = ali.x * (world.alignmentWeight/10) + coh.x * (world.cohesionWeight/10) + sep.x * (world.separationWeight/10) + wind.x * (world.windWeight/100); // todo: adjust weighting later when other forces are here
+        this.ay = ali.y * (world.alignmentWeight/10) + coh.y * (world.cohesionWeight/10) + sep.y * (world.separationWeight/10) + wind.y * (world.windWeight/100);
     
         // Update velocity with acceleration
         this.vx += this.ax;
@@ -290,27 +294,39 @@ class Boid {
         // calculate the angle the boid is traveling
         const angle = Math.atan2(this.vy, this.vx);
         
-        // save the current canvas state
         ctx.save();
         
         // move to the boid's position and rotate
         ctx.translate(this.x, this.y);
         ctx.rotate(angle);
         
-        // draw a triangle pointing right (in the direction of travel)
+        // draw fish body (diamond/pointed oval shape)
         ctx.beginPath();
-        ctx.moveTo(8, 0);      // nose of triangle (front)
-        ctx.lineTo(-4, 4);     // bottom back corner
-        ctx.lineTo(-4, -4);    // top back corner
+        ctx.moveTo(8, 0);        // Nose (front point)
+        ctx.lineTo(2, 4);        // Bottom right
+        ctx.lineTo(-6, 3);       // Bottom back
+        ctx.lineTo(-6, -3);      // Top back
+        ctx.lineTo(2, -4);       // Top right
         ctx.closePath();
-        
-        ctx.fillStyle = '#4af';
+        ctx.fillStyle = this.color;
         ctx.fill();
-        ctx.strokeStyle = '#6cf';
+        ctx.strokeStyle = this.color;
         ctx.lineWidth = 1;
         ctx.stroke();
         
-        // restore the canvas state
+        // draw tail fin (V-shape)
+        ctx.beginPath();
+        ctx.moveTo(-6, 0);       // Base of tail (connects to body)
+        ctx.lineTo(-12, -5);     // Top fin point
+        ctx.lineTo(-10, 0);      // Middle (creates V-shape)
+        ctx.lineTo(-12, 5);      // Bottom fin point
+        ctx.closePath();
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.strokeStyle = this.color;
+        ctx.stroke();
+        
+        // Restore the canvas state
         ctx.restore();
     }
 }
@@ -340,6 +356,11 @@ class World {
                 ));
             }
         }
+
+        this.cohesionWeight = 10;
+        this.alignmentWeight = 10;
+        this.separationWeight = 20;
+        this.windWeight = 20;
     }
 }
 
@@ -388,6 +409,40 @@ sliderChange('speed', (speed)=>{
     }
 });
 
+sliderChange('perception', (radius)=>{
+    const radiusValue = parseInt(radius);
+    // update all boids' neighbor perception radius
+    for (let boid of world.allBoids) {
+        boid.neighborRadius = radiusValue;
+    }
+});
+
+sliderChange('separationRadius', (radius)=>{
+    const radiusValue = parseInt(radius);
+    // update all boids' neighbor perception radius
+    for (let boid of world.allBoids) {
+        boid.separationDistance = radiusValue;
+    }
+});
+
+sliderChange('cohesion', (cohesion)=>{
+    world.cohesionWeight = parseFloat(cohesion);
+});
+
+sliderChange('separation', (separation)=>{
+    world.separationWeight = parseFloat(separation);
+});
+
+sliderChange('alignment', (alignment)=>{
+    world.alignmentWeight = parseFloat(alignment);
+});
+
+sliderChange('wind', (wind)=>{
+    world.windWeight = parseFloat(wind);
+});
+
+
+
 
 // === ANIMATION LOOP ===
 
@@ -405,7 +460,7 @@ function render(currentTime) {
     const deltaTime = (currentTime - previousTime)/1000;
     previousTime = currentTime;
 
-    ctx.fillStyle = '#1a1a1a';
+    ctx.fillStyle = '#110f38';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     // UPDATE AND DRAW WIND ZONES - ADD THIS
