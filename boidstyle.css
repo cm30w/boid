@@ -17,8 +17,8 @@ body {
     background: #0d0c21;
     display: flex;
     min-height: 100vh;
-    font-family: 'JetBrains Mono', monospace;  /* Change this */
-    font-weight: 700;  /* Makes everything bold by default */
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700; /* bold */
 }
 
 .description {
@@ -51,7 +51,7 @@ body {
 .control-group label {
     display: block;
     margin-bottom: 10px;
-    font-size: 16px;  /* Bigger text */
+    font-size: 16px;
     color: #f3ad51;
 }
 
@@ -67,7 +67,7 @@ input[type="range"] {
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 20px;  /* Bigger thumb */
+    width: 20px;  /* thumb */
     height: 20px;
     background: rgb(229, 255, 157);
     cursor: pointer;
@@ -103,5 +103,5 @@ input[type="range"]::-moz-range-thumb:hover {
 
 #canvas1 {
     background: #1a1a1a;
-    margin: 0 auto;  /* pushes canvas to the right */
+    margin: 0 auto;
 }

@@ -142,7 +142,7 @@ class Boid {
             }
         }
         
-        // v4: SUM(v3) / count - total repulsive force. count=num of neighboring boids
+        // v4: SUM(v3) / count - total repulsive force, count=num of neighboring boids
         if (count > 0) {
             steerX /= count;
             steerY /= count;
@@ -243,7 +243,7 @@ class Boid {
     }
 
     getNeighborBoids(perceptionRadius) {
-        return world.allBoids.filter(other => {  // this line was changed
+        return world.allBoids.filter(other => {
             if (other === this) return false;
             
             const d = distance(this.x, this.y, other.x, other.y);
@@ -257,7 +257,6 @@ class Boid {
         let coh = this.cohere(deltaTime, neighborBoids); // cohere
         let sep = this.separate(deltaTime, neighborBoids); // separate
         let wind = this.applyWind(windZones);  // wind
-
 
         // combine forces
         this.ax = ali.x * (world.alignmentWeight/10) + coh.x * (world.cohesionWeight/10) + sep.x * (world.separationWeight/10) + wind.x * (world.windWeight/100); // todo: adjust weighting later when other forces are here
@@ -306,11 +305,11 @@ class Boid {
         
         // draw fish body (diamond/pointed oval shape)
         ctx.beginPath();
-        ctx.moveTo(8, 0);        // Nose (front point)
-        ctx.lineTo(2, 4);        // Bottom right
-        ctx.lineTo(-6, 3);       // Bottom back
-        ctx.lineTo(-6, -3);      // Top back
-        ctx.lineTo(2, -4);       // Top right
+        ctx.moveTo(8, 0);        // nose (front point)
+        ctx.lineTo(2, 4);        // bottom right
+        ctx.lineTo(-6, 3);       // bottom back
+        ctx.lineTo(-6, -3);      // top back
+        ctx.lineTo(2, -4);       // top right
         ctx.closePath();
         ctx.fillStyle = this.color;
         ctx.fill();
@@ -320,10 +319,10 @@ class Boid {
         
         // draw tail fin (V-shape)
         ctx.beginPath();
-        ctx.moveTo(-6, 0);       // Base of tail (connects to body)
-        ctx.lineTo(-12, -5);     // Top fin point
-        ctx.lineTo(-10, 0);      // Middle (creates V-shape)
-        ctx.lineTo(-12, 5);      // Bottom fin point
+        ctx.moveTo(-6, 0);       // base of tail (connects to body)
+        ctx.lineTo(-12, -5);     // top fin point
+        ctx.lineTo(-10, 0);      // middle (creates V-shape)
+        ctx.lineTo(-12, 5);      // bottom fin point
         ctx.closePath();
         ctx.fillStyle = this.color;
         ctx.fill();
@@ -423,7 +422,6 @@ sliderChange('perception', (radius)=>{
 
 sliderChange('separationRadius', (radius)=>{
     const radiusValue = parseInt(radius);
-    // update all boids' neighbor perception radius
     for (let boid of world.allBoids) {
         boid.separationDistance = radiusValue;
     }
@@ -445,9 +443,6 @@ sliderChange('wind', (wind)=>{
     world.windWeight = parseFloat(wind);
 });
 
-
-
-
 // === ANIMATION LOOP ===
 
 let previousTime;
@@ -467,7 +462,6 @@ function render(currentTime) {
     ctx.fillStyle = '#110f38';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // UPDATE AND DRAW WIND ZONES - ADD THIS
     for (let zone of world.windZones) {
         zone.updateParticles(deltaTime);
         zone.draw();
