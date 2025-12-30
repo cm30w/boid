@@ -299,6 +299,10 @@ class Boid {
         // move to the boid's position and rotate
         ctx.translate(this.x, this.y);
         ctx.rotate(angle);
+
+        // glowing effect
+        ctx.shadowBlur = 15;           // glow radius
+        ctx.shadowColor = this.color;
         
         // draw fish body (diamond/pointed oval shape)
         ctx.beginPath();
